@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLAVE World - Menu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet"></noscript>
+  <!-- Korean pixel font (if it does not load, a normal Korean font is used) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css"></noscript>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Same night sky as the start page -->
+  <canvas id="sky"></canvas>
+
+  <!-- Main menu -->
+  <main class="menu-screen">
+    <div class="menu-inner">
+      <h1 class="menu-title">PLAVE WORLD</h1>
+      <p class="menu-sub">길을 선택하세요</p>
+
+      <nav class="menu-list">
+        <a class="menu-item" href="how-it-works.html"><span class="num">1</span> 버추얼 그룹은 어떻게 작동할까?</a>
+        <a class="menu-item" href="members.html"><span class="num">2</span> 멤버</a>
+        <a class="menu-item" href="achievements.html"><span class="num">3</span> 업적</a>
+      </nav>
+
+      <!-- XP bar and badge -->
+      <section class="xp">
+        <div class="xp-top">
+          <span>XP</span>
+          <span id="xpText">0 / 100</span>
+        </div>
+        <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+        <div class="badge" id="badge">
+          <img src="images/badge.png" alt="">
+          <span id="badgeText">3개 화면을 모두 방문하면 탐험가 배지를 얻어요</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- White screen that fades away (only shown when we come from the start page) -->
+  <div class="white-fade" id="whiteFade" hidden></div>
+
+  <script>
+    try {
+      if (sessionStorage.getItem("fromStart")) {
+        sessionStorage.removeItem("fromStart");
+        document.getElementById("whiteFade").hidden = false;
+      }
+    } catch (e) {}
+  </script>
+
+  <script src="debug.js"></script>
+  <script src="stars.js"></script>
+  <script src="sound.js"></script>
+  <script src="nav.js"></script>
+  <script src="menu.js"></script>
+</body>
+</html>

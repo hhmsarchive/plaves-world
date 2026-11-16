@@ -1,0 +1,754 @@
+/* Colors: black and one dark neon color (change them here) */
+:root {
+  --black: #000;
+  --neon: #00d8e8;
+}
+
+/* Remove default space and make sizes easier to control */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Page: plain black background and pixel font */
+body {
+  height: 100vh;
+  overflow: hidden;
+  background: var(--black);
+  font-family: "Pixelify Sans", "Galmuri11", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  color: white;
+}
+
+/* Custom pixel mouse cursor: PLAVE lightstick (it lights up on buttons) */
+html {
+  cursor: url("images/cursor.png") 3 2, auto;
+  cursor: -webkit-image-set(url("images/cursor.png") 1x, url("images/cursor@2x.png") 2x) 3 2, auto;
+}
+
+/* The canvas that shows stars and constellations */
+#sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* After Start is clicked, the question fades out */
+body.started .start-box {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Question and button in the center */
+.start-box {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  transition: opacity 0.6s;
+}
+
+h1 {
+  font-size: clamp(1.4rem, 4.5vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 36px;
+}
+
+button {
+  padding: 12px 44px;
+  font-family: inherit;
+  font-size: 1.3rem;
+  color: var(--neon);
+  background: transparent;
+  border: 2px solid var(--neon);
+  border-radius: 0;
+  cursor: url("images/cursor-lit.png") 3 2, pointer;
+  cursor: -webkit-image-set(url("images/cursor-lit.png") 1x, url("images/cursor-lit@2x.png") 2x) 3 2, pointer;
+  transition: 0.2s;
+}
+button:hover {
+  color: var(--black);
+  background: var(--neon);
+}
+
+/* Loading screen */
+.loading {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.3rem;
+  color: white;
+}
+.loading.show {
+  display: flex;
+}
+.bar {
+  width: 250px;
+  height: 14px;
+  margin-top: 16px;
+  border: 2px solid var(--neon);
+}
+.bar-fill {
+  width: 0%;
+  height: 100%;
+  background: var(--neon);
+}
+
+/* White light: grows from the center and fills the screen */
+.white-light {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(circle, #fff 0%, #fff 35%, rgba(255, 255, 255, 0) 70%);
+  opacity: 0;
+  transform: scale(0.2);
+  transition: opacity 1.6s ease-in, transform 1.8s ease-in;
+  pointer-events: none;
+}
+.white-light.on {
+  opacity: 1;
+  transform: scale(3);
+}
+
+/* Used on the menu page: starts white, then fades away */
+.white-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: #fff;
+  pointer-events: none;
+  animation: fadeOut 1.5s ease forwards;
+}
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+/* Temporary text on the menu page */
+.menu-box {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Back / Menu / Forward buttons (bottom of the page) */
+.page-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+.nav-btn {
+  padding: 6px 12px;
+  min-height: 32px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--neon);
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--neon);
+  text-decoration: none;
+  cursor: url("images/cursor-lit.png") 3 2, pointer;
+  cursor: -webkit-image-set(url("images/cursor-lit.png") 1x, url("images/cursor-lit@2x.png") 2x) 3 2, pointer;
+  transition: 0.2s;
+}
+.nav-btn:hover {
+  color: var(--black);
+  background: var(--neon);
+}
+.nav-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+/* the button of the page we are on now */
+.nav-btn.current {
+  opacity: 1;
+  color: var(--black);
+  background: var(--neon);
+}
+
+/* The Menu button is a pixel-art earth icon */
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-btn.home {
+  padding: 6px 12px;
+}
+.nav-btn.home img {
+  display: block;
+  image-rendering: pixelated;
+}
+.nav-btn.home:hover,
+.nav-btn.home.current {
+  color: inherit;
+  background: rgba(0, 216, 232, 0.25);
+}
+
+/* ---------- Main menu page ---------- */
+.menu-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  overflow-y: auto;
+  padding: 20px 20px 70px; /* space for the Back / Menu / Next buttons */
+}
+.menu-inner {
+  margin: auto; /* centers it, and still scrolls on very small screens */
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+.menu-title {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 3.4rem);
+  letter-spacing: 4px;
+}
+.menu-sub {
+  color: var(--neon);
+  font-size: 1.1rem;
+}
+.menu-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.menu-item {
+  display: block;
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 1.1rem;
+  color: white;
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--neon);
+  cursor: url("images/cursor-lit.png") 3 2, pointer;
+  cursor: -webkit-image-set(url("images/cursor-lit.png") 1x, url("images/cursor-lit@2x.png") 2x) 3 2, pointer;
+  transition: 0.2s;
+}
+.menu-item .num {
+  display: inline-block;
+  width: 1.6em;
+  color: var(--neon);
+}
+.menu-item:hover {
+  color: var(--black);
+  background: var(--neon);
+}
+.menu-item:hover .num {
+  color: var(--black);
+}
+/* small mark on pages that were visited */
+.menu-item.visited::after {
+  content: "방문함";
+  float: right;
+  font-size: 0.75rem;
+  line-height: 1.8;
+  color: var(--neon);
+}
+.menu-item.visited:hover::after {
+  color: var(--black);
+}
+
+/* XP bar and badge */
+.xp {
+  width: 100%;
+  margin-top: 6px;
+  font-size: 0.9rem;
+}
+.xp-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: var(--neon);
+}
+.xp-bar {
+  height: 12px;
+  border: 2px solid var(--neon);
+}
+.xp-fill {
+  width: 0%;
+  height: 100%;
+  background: var(--neon);
+  transition: width 0.8s ease;
+}
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  opacity: 0.5;
+}
+.badge img {
+  height: 20px;
+  image-rendering: pixelated;
+  filter: grayscale(1);
+}
+.badge.unlocked {
+  opacity: 1;
+  color: var(--neon);
+}
+.badge.unlocked img {
+  filter: none;
+}
+
+/* ---------- Pages that scroll (Members, etc.) ---------- */
+body.scroll-page {
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+.page-screen {
+  position: relative;
+  z-index: 2;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 28px 16px 90px; /* space for the Back / Menu / Next buttons */
+  text-align: center;
+}
+.page-title {
+  font-size: clamp(1.8rem, 6vw, 3rem);
+  letter-spacing: 3px;
+}
+.page-sub {
+  color: var(--neon);
+  margin: 6px 0 24px;
+}
+.credit {
+  margin-top: 28px;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Member flip cards ---------- */
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+.member-card {
+  perspective: 900px;
+  height: 480px;
+  cursor: url("images/cursor-lit.png") 3 2, pointer;
+  cursor: -webkit-image-set(url("images/cursor-lit.png") 1x, url("images/cursor-lit@2x.png") 2x) 3 2, pointer;
+}
+.member-card {
+  font-family: "Pixelify Sans", "Galmuri11", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+}
+.member-card:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+.member-card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+.card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--neon);
+  background: rgba(0, 0, 0, 0.85);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.member-card:hover .card-front {
+  background: rgba(0, 216, 232, 0.12);
+}
+
+/* front: photo + name */
+.photo {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: #05161a;
+}
+.photo .ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  color: var(--neon);
+}
+.photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-name {
+  padding: 10px 8px;
+  border-top: 2px solid var(--neon);
+  font-size: 1.2rem;
+}
+.card-role {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--neon);
+}
+
+/* back: details */
+.card-back {
+  transform: rotateY(180deg);
+  padding: 14px;
+  text-align: left;
+  font-size: 0.85rem;
+  overflow-y: auto;
+}
+.card-back h3 {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--neon);
+}
+.card-back dl {
+  display: grid;
+  grid-template-columns: 4.2em 1fr;
+  gap: 5px 8px;
+}
+.card-back dt {
+  color: var(--neon);
+}
+.card-back h4 {
+  margin: 14px 0 6px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 216, 232, 0.5);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--neon);
+}
+.card-back ul {
+  padding-left: 1.1em;
+  line-height: 1.45;
+}
+.card-back li {
+  margin-bottom: 6px;
+}
+
+/* "Did you know?" box and credit link */
+.did-you-know {
+  margin: 28px auto 0;
+  max-width: 640px;
+  padding: 16px 20px;
+  text-align: left;
+  border: 2px solid var(--neon);
+  background: rgba(0, 0, 0, 0.8);
+}
+.did-you-know h2 {
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--neon);
+}
+.did-you-know ul {
+  padding-left: 1.2em;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.did-you-know li {
+  margin-bottom: 6px;
+}
+.credit a {
+  color: var(--neon);
+}
+
+/* ---------- "How a virtual group works" page ---------- */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* overview boxes */
+.flow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 auto 34px;
+}
+.flow-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 100px;
+  padding: 10px 12px;
+  font-size: 1.2rem;
+  color: var(--neon);
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--neon);
+  cursor: url("images/cursor-lit.png") 3 2, pointer;
+  cursor: -webkit-image-set(url("images/cursor-lit.png") 1x, url("images/cursor-lit@2x.png") 2x) 3 2, pointer;
+  transition: 0.2s;
+}
+.flow-item span {
+  font-size: 0.75rem;
+  color: white;
+}
+.flow-item:hover {
+  color: var(--black);
+  background: var(--neon);
+}
+.flow-item:hover span {
+  color: var(--black);
+}
+.flow-arrow {
+  color: var(--neon);
+  font-size: 1.2rem;
+}
+
+/* vertical story line */
+.timeline {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: left;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 23px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(0, 216, 232, 0.5);
+}
+.t-step {
+  position: relative;
+  display: flex;
+  gap: 18px;
+  margin-bottom: 26px;
+  scroll-margin-top: 20px;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+.t-step.show {
+  opacity: 1;
+  transform: none;
+}
+.t-num {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--neon);
+  background: var(--black);
+  border: 2px solid var(--neon);
+}
+.t-body {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 216, 232, 0.6);
+}
+.t-body h2 {
+  margin-bottom: 6px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--neon);
+}
+.t-body p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-step {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+
+/* ---------- Keyword popups on the member cards ---------- */
+.pop {
+  border-bottom: 2px dotted var(--neon);
+  cursor: url("images/cursor-lit.png") 3 2, pointer;
+  cursor: -webkit-image-set(url("images/cursor-lit.png") 1x, url("images/cursor-lit@2x.png") 2x) 3 2, pointer;
+  transition: 0.2s;
+}
+.pop:hover,
+.pop:focus-visible {
+  color: var(--neon);
+  outline: none;
+}
+
+/* small preview next to the mouse */
+.pop-preview {
+  position: fixed;
+  z-index: 50;
+  display: none;
+  padding: 4px;
+  background: var(--black);
+  border: 2px solid var(--neon);
+  pointer-events: none;
+}
+.pop-preview img,
+.pop-preview video {
+  display: block;
+  max-width: 220px;
+  max-height: 220px;
+}
+
+/* big popup */
+.pop-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.85);
+}
+.pop-modal.show {
+  display: flex;
+}
+body.pop-open {
+  overflow: hidden;
+}
+.pop-box {
+  position: relative;
+  max-width: min(92vw, 720px);
+  max-height: 92vh;
+  padding: 14px;
+  text-align: center;
+  background: var(--black);
+  border: 2px solid var(--neon);
+}
+.pop-media img,
+.pop-media video {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 65vh;
+}
+.pop-empty {
+  padding: 40px 30px;
+  color: var(--neon);
+}
+.pop-caption {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.pop-credit {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+.pop-close {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  z-index: 1;
+  padding: 2px 10px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--black);
+  background: var(--neon);
+  border: 2px solid var(--neon);
+}
+.pop-close:hover {
+  color: var(--neon);
+  background: var(--black);
+}
+
+
+/* ---------- Fixes for phones and other browsers ---------- */
+
+/* Phone browsers: 100vh is taller than the visible screen, so use dvh when it exists */
+body {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* No delay or zoom when tapping, and no grey flash on tap */
+a, button, .member-card, .pop, .flow-item, .menu-item, .nav-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Korean text: do not break a word in the middle */
+h1, h2, h3, p, li, dd, .menu-item, .card-name {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Older iPhone / Safari: the card flip needs the prefixed names too */
+.card-inner {
+  -webkit-transform-style: preserve-3d;
+}
+.member-card {
+  -webkit-perspective: 900px;
+}
+.card-back {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .page-screen {
+    padding: 20px 12px 90px;
+  }
+  .member-card {
+    height: 500px;
+  }
+  .nav-btn {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+  .flow-item {
+    min-width: 88px;
+  }
+  .flow-arrow {
+    display: none;
+  }
+}
